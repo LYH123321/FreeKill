@@ -25,6 +25,7 @@ mkdir assets/res/packages
 cp -r ../packages/standard assets/res/packages
 cp -r ../packages/standard_cards assets/res/packages
 cp -r ../packages/maneuvering assets/res/packages
+cp -r ../packages/aichat assets/res/packages
 cp -r ../packages/test assets/res/packages
 rm assets/res/packages/test/test.lua
 cp ../packages/*.sql assets/res/packages
