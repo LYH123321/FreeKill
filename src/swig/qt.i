@@ -31,6 +31,48 @@ static int GetMicroSecond(lua_State *L) {
 }
 %}
 
+%native(fkHttpPost) int fkHttpPost(lua_State *L);
+%{
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QEventLoop>
+// 同步 HTTP POST，返回 (body, http_code, err)
+static int fkHttpPost(lua_State *L) {
+  int argc = lua_gettop(L);
+  if (argc < 2 || !lua_isstring(L, 1) || !lua_isstring(L, 2)) {
+    return luaL_error(L, "fkHttpPost expects (url, body[, timeout_ms])");
+  }
+  const QByteArray url = QByteArray(lua_tostring(L, 1));
+  const QByteArray body = QByteArray(lua_tostring(L, 2));
+  int timeoutMs = 30000;
+  if (argc >= 3 && lua_isnumber(L, 3)) timeoutMs = (int)lua_tointeger(L, 3);
+  QNetworkAccessManager manager;
+  manager.setTransferTimeout(timeoutMs);
+  QNetworkRequest request{QUrl(QString::fromUtf8(url))};
+  request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+  if (argc >= 4 && lua_isstring(L, 4)) {
+    const QByteArray bearer = QByteArray(lua_tostring(L, 4));
+    if (!bearer.isEmpty()) {
+      request.setRawHeader("Authorization", "Bearer " + bearer);
+    }
+  }
+  QNetworkReply *reply = manager.post(request, body);
+  QEventLoop loop;
+  QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+  loop.exec();
+  const QByteArray data = reply->readAll();
+  const int code = reply->attribute(
+      QNetworkRequest::HttpStatusCodeAttribute).toInt();
+  const QString err = reply->error() == QNetworkReply::NoError
+      ? QString() : reply->errorString();
+  reply->deleteLater();
+  lua_pushlstring(L, data.constData(), data.size());
+  lua_pushinteger(L, code);
+  lua_pushstring(L, err.toUtf8().constData());
+  return 3;
+}
+%}
 void qDebug(const char *msg, ...);
 void qInfo(const char *msg, ...);
 void qWarning(const char *msg, ...);

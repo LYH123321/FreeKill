@@ -311,9 +311,38 @@ local role_mode = fk.CreateGameMode{
     }
   end,
 }
-
 local W = require "ui_emu.preferences"
+
 role_mode.ui_settings = {
+  W.PreferenceGroup {
+    title = "AI角色卡 · 边打边聊",
+
+    W.EntryRow {
+      _settingsKey = "ai_api_url",
+      title = "API 地址 (OpenAI 兼容)",
+      value = function(settings)
+        return (settings._mode or {}).ai_api_url or ""
+      end,
+    },
+    W.EntryRow {
+      _settingsKey = "ai_api_key",
+      title = "API 密钥 (Bearer Token)",
+      value = function(settings)
+        return (settings._mode or {}).ai_api_key or ""
+      end,
+    },
+    W.EntryRow {
+      _settingsKey = "ai_api_model",
+      title = "模型名",
+      value = function(settings)
+        return (settings._mode or {}).ai_api_model or ""
+      end,
+    },
+    W.SwitchRow {
+      _settingsKey = "ai_chat_enabled",
+      title = "启用 AI 台词（需填好上面三项）",
+    },
+  },
   W.PreferenceGroup {
     title = "role_misc_change",
 
